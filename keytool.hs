@@ -57,18 +57,20 @@ deserialiseKeyBox :: Get KeyBox
 deserialiseKeyBox = do
   magic <- getByteString (B.length auth_magic)
   unless (magic == auth_magic) (fail "Magic does not match")
-  let keys = do
-        count <- fromIntegral <$> getWord32be
-        -- Parse the private keys, but throw them away
-        replicateM count getPublicKey
-        privateKeys <- runStrictGet (deserialisePrivateKeys count) <$> getPascalString
-        return privateKeys
-      getPublicKey = runStrictGet deserialisePublicKey <$> getPascalString
-  KeyBox
-    <$> ((\x -> assert (x == "none") x) <$> getPascalString)
-    <*> getPascalString
-    <*> getPascalString
-    <*> keys
+  cn <- getPascalString
+  unless (cn == "none") (fail "Unsupported cipher")
+  kn <- getPascalString
+  unless (kn == "none") (fail "Unsupported kdf")
+  ko <- getPascalString
+  unless (ko == "") (fail "Invalid kdf options")
+  keys <- do
+    count <- fromIntegral <$> getWord32be
+    -- Parse the private keys, but throw them away
+    let getPublicKey = runStrictGet deserialisePublicKey <$> getPascalString
+    replicateM count getPublicKey
+    privateKeys <- runStrictGet (deserialisePrivateKeys count) <$> getPascalString
+    return privateKeys
+  return $ KeyBox cn kn ko keys
 
 deserialisePublicKey :: Get Key
 deserialisePublicKey = PublicKey <$> getPascalString <*> getPascalString
