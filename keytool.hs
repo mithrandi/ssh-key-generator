@@ -1,14 +1,18 @@
+{-# LANGUAGE OverloadedStrings #-}
+
 module Main (main) where
 
 import Control.Applicative (pure, (<$>), (<*>))
 import Control.Monad (replicateM, unless)
 import Control.Exception (assert)
-import Debug.Trace (traceShow)
 import qualified Data.ByteString as B
 import qualified Data.ByteString.Char8 as BC
 import qualified Data.ByteString.Base64 as B64
-import qualified Data.ByteString.Lazy as LB
+import Data.ByteString.Lazy (toStrict, fromStrict)
 import Data.Binary.Get (Get, runGet, getByteString, getWord32be, getRemainingLazyByteString)
+
+runStrictGet :: Get c -> B.ByteString -> c
+runStrictGet = (. fromStrict) . runGet
 
 data KeyBox = KeyBox
               { ciphername :: B.ByteString
@@ -18,7 +22,7 @@ data KeyBox = KeyBox
               } deriving (Show)
 
 auth_magic :: B.ByteString
-auth_magic = BC.pack "openssh-key-v1\000"
+auth_magic = "openssh-key-v1\000"
 
 expected_padding :: B.ByteString
 expected_padding = BC.pack ['\001'..'\377']
@@ -39,12 +43,12 @@ dearmorPrivateKey :: B.ByteString -> Either String B.ByteString
 dearmorPrivateKey =
     B64.decode
     . B.concat
-    . takeWhile (/= BC.pack "-----END OPENSSH PRIVATE KEY-----")
+    . takeWhile (/= "-----END OPENSSH PRIVATE KEY-----")
     . drop 1
-    . dropWhile (/= BC.pack "-----BEGIN OPENSSH PRIVATE KEY-----")
+    . dropWhile (/= "-----BEGIN OPENSSH PRIVATE KEY-----")
     . BC.lines
 
-getPascalString :: Get BC.ByteString
+getPascalString :: Get B.ByteString
 getPascalString = do
   len <- getWord32be
   getByteString (fromIntegral len)
@@ -57,11 +61,11 @@ deserialiseKeyBox = do
         count <- fromIntegral <$> getWord32be
         -- Parse the private keys, but throw them away
         replicateM count getPublicKey
-        privateKeys <- runGet (deserialisePrivateKeys count) <$> (LB.fromStrict <$> getPascalString)
+        privateKeys <- runStrictGet (deserialisePrivateKeys count) <$> getPascalString
         return privateKeys
-      getPublicKey = runGet deserialisePublicKey <$> (LB.fromStrict <$> getPascalString)
+      getPublicKey = runStrictGet deserialisePublicKey <$> getPascalString
   KeyBox
-    <$> ((\x -> assert (x == BC.pack "none") x) <$> getPascalString)
+    <$> ((\x -> assert (x == "none") x) <$> getPascalString)
     <*> getPascalString
     <*> getPascalString
     <*> keys
@@ -75,17 +79,17 @@ deserialisePrivateKeys count = do
   checkint2 <- getWord32be
   unless (checkint1 == checkint2) (fail "Decryption failed")
   keys <- replicateM count (PrivateKey <$> getPascalString <*> getPascalString <*> getPascalString <*> getPascalString)
-  padding <- LB.toStrict <$> getRemainingLazyByteString
+  padding <- toStrict <$> getRemainingLazyByteString
   unless (B.take (B.length padding) expected_padding == padding) (fail "Incorrect padding")
   return keys
 
-parseKeyBox :: LB.ByteString -> KeyBox
-parseKeyBox = runGet deserialiseKeyBox
+parseKeyBox :: B.ByteString -> KeyBox
+parseKeyBox = runStrictGet deserialiseKeyBox
 
 main :: IO ()
 main = do
   contents <- B.getContents
   box <- either error pure $ do
     b <- dearmorPrivateKey contents
-    return . parseKeyBox . LB.fromStrict $ b
+    return . parseKeyBox $ b
   putStrLn $ show box
