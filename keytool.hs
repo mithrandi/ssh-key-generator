@@ -53,8 +53,8 @@ getPascalString = do
   len <- getWord32be
   getByteString (fromIntegral len)
 
-deserialiseKeyBox :: Get KeyBox
-deserialiseKeyBox = do
+getKeyBox :: Get KeyBox
+getKeyBox = do
   magic <- getByteString (B.length auth_magic)
   unless (magic == auth_magic) (fail "Magic does not match")
   cn <- getPascalString
@@ -66,17 +66,16 @@ deserialiseKeyBox = do
   keys <- do
     count <- fromIntegral <$> getWord32be
     -- Parse the private keys, but throw them away
-    let getPublicKey = runStrictGet deserialisePublicKey <$> getPascalString
-    replicateM count getPublicKey
-    privateKeys <- runStrictGet (deserialisePrivateKeys count) <$> getPascalString
+    replicateM count (runStrictGet getPublicKey <$> getPascalString)
+    privateKeys <- runStrictGet (getPrivateKeys count) <$> getPascalString
     return privateKeys
   return $ KeyBox cn kn ko keys
 
-deserialisePublicKey :: Get Key
-deserialisePublicKey = PublicKey <$> getPascalString <*> getPascalString
+getPublicKey :: Get Key
+getPublicKey = PublicKey <$> getPascalString <*> getPascalString
 
-deserialisePrivateKeys :: Int -> Get [Key]
-deserialisePrivateKeys count = do
+getPrivateKeys :: Int -> Get [Key]
+getPrivateKeys count = do
   checkint1 <- getWord32be
   checkint2 <- getWord32be
   unless (checkint1 == checkint2) (fail "Decryption failed")
@@ -90,7 +89,7 @@ deserialisePrivateKeys count = do
   return keys
 
 parseKeyBox :: B.ByteString -> KeyBox
-parseKeyBox = runStrictGet deserialiseKeyBox
+parseKeyBox = runStrictGet getKeyBox
 
 main :: IO ()
 main = do
