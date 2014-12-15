@@ -5,6 +5,7 @@ module Main (main) where
 import Control.Applicative (pure, (<$>), (<*>))
 import Control.Monad (replicateM, unless)
 import Control.Exception (assert)
+import Debug.Trace (traceShow)
 import qualified Data.ByteString as B
 import qualified Data.ByteString.Char8 as BC
 import qualified Data.ByteString.Base64 as B64
@@ -74,18 +75,21 @@ getKeyBox = do
 getPublicKey :: Get Key
 getPublicKey = PublicKey <$> getPascalString <*> getPascalString
 
+getPrivateKey :: Get Key
+getPrivateKey = PrivateKey
+  <$> getPascalString
+  <*> getPascalString
+  <*> getPascalString
+  <*> getPascalString
+
 getPrivateKeys :: Int -> Get [Key]
 getPrivateKeys count = do
   checkint1 <- getWord32be
   checkint2 <- getWord32be
   unless (checkint1 == checkint2) (fail "Decryption failed")
-  let privateKey = do
-        key <- PrivateKey <$> getPascalString <*> getPascalString <*> getPascalString <*> getPascalString
-        unless (publicKeyData key == B.drop 32 (privateKeyData key)) (fail "Public/private key mismatch")
-        return key
-  keys <- replicateM count privateKey
+  keys <- replicateM count getPrivateKey
   padding <- toStrict <$> getRemainingLazyByteString
-  unless (B.take (B.length padding) expected_padding == padding) (fail "Incorrect padding")
+  unless (B.take (B.length padding) expected_padding == (traceShow padding padding)) (fail "Incorrect padding")
   return keys
 
 parseKeyBox :: B.ByteString -> KeyBox
