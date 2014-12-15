@@ -33,7 +33,7 @@ data Key = PublicKey
            }
          | PrivateKey
            { privateKeyAlg :: B.ByteString
-           , privatePublicKeyData :: B.ByteString
+           , publicKeyData :: B.ByteString
            , privateKeyData :: B.ByteString
            , comment :: B.ByteString
            }
@@ -80,7 +80,11 @@ deserialisePrivateKeys count = do
   checkint1 <- getWord32be
   checkint2 <- getWord32be
   unless (checkint1 == checkint2) (fail "Decryption failed")
-  keys <- replicateM count (PrivateKey <$> getPascalString <*> getPascalString <*> getPascalString <*> getPascalString)
+  let privateKey = do
+        key <- PrivateKey <$> getPascalString <*> getPascalString <*> getPascalString <*> getPascalString
+        unless (publicKeyData key == B.drop 32 (privateKeyData key)) (fail "Public/private key mismatch")
+        return key
+  keys <- replicateM count privateKey
   padding <- toStrict <$> getRemainingLazyByteString
   unless (B.take (B.length padding) expected_padding == padding) (fail "Incorrect padding")
   return keys
