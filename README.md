@@ -14,6 +14,14 @@ different keypair for every host you need to log into, thus preventing someone
 from correlating different user accounts on different hosts by the public keys
 in authorized_keys.
 
+This proof of concept implementation just generates one keypair at a time;
+ideally the keypairs would be generated on demand, perhaps by an SSH agent
+implementation (the key generation step should only take a few milliseconds).
+
+Note that implementing something similar for other key types should be
+possible, but harder; Ed25519 allows any 32-byte input to be used to generate a
+key, which makes the implementation trivial.
+
 Usage
 =====
 You will need ghc and cabal-install installed; look for a `ghc` package for
