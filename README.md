@@ -24,8 +24,8 @@ key, which makes the implementation trivial.
 
 Usage
 =====
-You will need ghc and cabal-install installed; look for a `ghc` package for
-your operating system, or try the Haskell Platform.
+You will need ghc and cabal, as well as the libsodium development files; on
+Debian/Ubuntu, the `ghc` and `libsodium-dev` packages are what you need.
 
 ```ShellSession
 $ git clone https://github.com/mithrandi/ssh-key-generator.git
