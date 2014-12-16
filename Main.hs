@@ -9,6 +9,7 @@ import qualified Data.ByteString.Char8 as BC
 import           Data.Monoid ((<>))
 import           SSH.Key (PrivateKey(Ed25519PrivateKey), PublicKey(Ed25519PublicKey), serialiseKey)
 import           System.Environment (getArgs)
+import           System.Posix.Files (setFileCreationMask, groupModes, otherModes, unionFileModes)
 
 main :: IO ()
 main = do
@@ -17,5 +18,6 @@ main = do
   secret <- B.readFile secretFile
   let seed = SHA256.hash (secret <> handle)
   let (publicKeyData, privateKeyData) = argh seed
+  setFileCreationMask $ groupModes `unionFileModes` otherModes
   B.writeFile outputFile . serialiseKey
     $ Ed25519PrivateKey (Ed25519PublicKey publicKeyData) privateKeyData handle
