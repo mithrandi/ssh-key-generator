@@ -17,8 +17,8 @@ argh seed | S.length seed /= signSeed = error "seed has incorrect length"
     withForeignPtr pk $ \ppk ->
       withForeignPtr sk $ \psk -> do
         0 <- c_sign_seed_keypair ppk psk pseed
-        bpk <- SU.unsafePackCStringLen (ppk, signPK)
-        bsk <- SU.unsafePackCStringLen (psk, signSK)
+        bpk <- S.packCStringLen (ppk, signPK)
+        bsk <- S.packCStringLen (psk, signSK)
         return (bpk, bsk)
 
 -- | The size of a public key for signing verification
