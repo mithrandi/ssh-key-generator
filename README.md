@@ -18,9 +18,10 @@ This proof of concept implementation just generates one keypair at a time;
 ideally the keypairs would be generated on demand, perhaps by an SSH agent
 implementation (the key generation step should only take a few milliseconds).
 
-Note that implementing something similar for other key types should be
-possible, but harder; Ed25519 allows any 32-byte input to be used to generate a
-key, which makes the implementation trivial.
+Note that while Ed25519 allows for using any 32-byte input to generate a
+keypair, making this implementation trivial, implementing a similar scheme for
+other key types is probably possible in some cases (eg. ECDSA), and infeasible
+in others (DSA/RSA, probably).
 
 Usage
 =====
