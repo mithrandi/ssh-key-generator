@@ -1,5 +1,5 @@
 -- I can't believe I have to do this
-module Argh (argh) where
+module Argh (seed_keypair) where
 
 import qualified Data.ByteString as S
 import qualified Data.ByteString.Unsafe as SU
@@ -8,8 +8,8 @@ import           Foreign.ForeignPtr (mallocForeignPtrBytes, withForeignPtr)
 import           Foreign.Ptr (Ptr)
 import           System.IO.Unsafe (unsafePerformIO)
 
-argh :: S.ByteString -> (S.ByteString, S.ByteString)
-argh seed | S.length seed /= signSeed = error "seed has incorrect length"
+seed_keypair :: S.ByteString -> (S.ByteString, S.ByteString)
+seed_keypair seed | S.length seed /= signSeed = error "seed has incorrect length"
           | otherwise = unsafePerformIO $ do
   pk <- mallocForeignPtrBytes signPK
   sk <- mallocForeignPtrBytes signSK
