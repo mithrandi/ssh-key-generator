@@ -13,7 +13,7 @@ executable ssh-key-generator
   main-is:             Main.hs
   build-depends:       base >=4.6 && <4.7,
                        binary,
-                       bytestring,
+                       bytestring (>= 0.10.4.0),
                        base64-bytestring,
                        cryptohash,
                        unix

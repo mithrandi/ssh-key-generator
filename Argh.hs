@@ -4,22 +4,20 @@ module Argh (seed_keypair) where
 import qualified Data.ByteString as S
 import qualified Data.ByteString.Unsafe as SU
 import           Foreign.C (CChar, CInt(..), CSize(..))
-import           Foreign.ForeignPtr (mallocForeignPtrBytes, withForeignPtr)
+import           Foreign.Marshal.Alloc (mallocBytes)
 import           Foreign.Ptr (Ptr)
 import           System.IO.Unsafe (unsafePerformIO)
 
 seed_keypair :: S.ByteString -> (S.ByteString, S.ByteString)
 seed_keypair seed | S.length seed /= signSeed = error "seed has incorrect length"
           | otherwise = unsafePerformIO $ do
-  pk <- mallocForeignPtrBytes signPK
-  sk <- mallocForeignPtrBytes signSK
-  SU.unsafeUseAsCString seed $ \pseed ->
-    withForeignPtr pk $ \ppk ->
-      withForeignPtr sk $ \psk -> do
-        0 <- c_sign_seed_keypair ppk psk pseed
-        bpk <- S.packCStringLen (ppk, signPK)
-        bsk <- S.packCStringLen (psk, signSK)
-        return (bpk, bsk)
+  pk <- mallocBytes signPK
+  sk <- mallocBytes signSK
+  SU.unsafeUseAsCString seed $ \pseed -> do
+    0 <- c_sign_seed_keypair pk sk pseed
+    bpk <- SU.unsafePackMallocCStringLen (pk, signPK)
+    bsk <- SU.unsafePackMallocCStringLen (sk, signSK)
+    return (bpk, bsk)
 
 -- | The size of a public key for signing verification
 signPK :: Int
