@@ -1,10 +1,11 @@
 -- I can't believe I have to do this
 module Argh (seed_keypair) where
 
+import           Control.Exception (handle, throw, SomeException)
 import qualified Data.ByteString as S
 import qualified Data.ByteString.Unsafe as SU
 import           Foreign.C (CChar, CInt(..), CSize(..))
-import           Foreign.Marshal.Alloc (mallocBytes)
+import           Foreign.Marshal.Alloc (mallocBytes, free)
 import           Foreign.Ptr (Ptr)
 import           System.IO.Unsafe (unsafePerformIO)
 
@@ -12,12 +13,14 @@ seed_keypair :: S.ByteString -> (S.ByteString, S.ByteString)
 seed_keypair seed | S.length seed /= signSeed = error "seed has incorrect length"
           | otherwise = unsafePerformIO $ do
   pk <- mallocBytes signPK
-  sk <- mallocBytes signSK
-  SU.unsafeUseAsCString seed $ \pseed -> do
-    0 <- c_sign_seed_keypair pk sk pseed
-    bpk <- SU.unsafePackMallocCStringLen (pk, signPK)
-    bsk <- SU.unsafePackMallocCStringLen (sk, signSK)
-    return (bpk, bsk)
+  handle (\e -> free pk >> throw (e :: SomeException)) $ do
+    sk <- mallocBytes signSK
+    handle (\e -> free sk >> throw (e :: SomeException)) $ do
+      SU.unsafeUseAsCString seed $ \pseed -> do
+        0 <- c_sign_seed_keypair pk sk pseed
+        bpk <- SU.unsafePackMallocCStringLen (pk, signPK)
+        bsk <- SU.unsafePackMallocCStringLen (sk, signSK)
+        return (bpk, bsk)
 
 -- | The size of a public key for signing verification
 signPK :: Int
