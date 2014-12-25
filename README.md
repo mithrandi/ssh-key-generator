@@ -34,10 +34,22 @@ $ cd ssh-key-generator
 $ cabal sandbox init
 $ cabal install
 $ head -c 32 /dev/urandom > seed
-$ cabal run ./seed HIMOM ./id_ed25519
+$ cabal run -- --seed ./seed --mode raw --handle HIMOM --output ./id_ed25519
 $ ssh-keygen -y -f ./id_ed25519
 ```
 
 `./seed` is the master key, `HIMOM` is the key handle, and `./id_ed25519` is
 the output file into which the private key will be placed. `ssh-keygen` is then
 invoked to print the public key out.
+
+There are three modes available:
+
+- raw: Use the seed as is; must be at least 32
+  bytes long, and must have at least that much entropy in it to avoid
+  weaker-than-expected keys.
+- generate: Same as raw, except that a new seed will be generated using an
+  appropriate platform-specific mechanism. The program will try not to
+  overwrite an existing seed file.
+- key: Use an existing Ed25519 SSH private key. Only the seed of the key will
+  be used, rather than the whole key file data, so changes in the metadata will
+  not affect generation.

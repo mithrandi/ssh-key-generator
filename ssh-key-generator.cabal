@@ -16,8 +16,12 @@ executable ssh-key-generator
                        bytestring (>= 0.10.4.0),
                        base64-bytestring,
                        cryptohash,
-                       unix
+                       unix,
+                       optparse-applicative,
+                       directory,
+                       entropy
   -- hs-source-dirs:
   default-language:    Haskell2010
-  default-extensions:  OverloadedStrings
+  default-extensions:  OverloadedStrings, ViewPatterns
+  ghc-options:         -Wall -Werror
   extra-libraries:     sodium
