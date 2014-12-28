@@ -9,14 +9,15 @@ module SSH.Key
        ) where
 
 import           Control.Applicative ((<$>), (<*>))
-import Data.Monoid ((<>))
 import           Control.Monad (unless, replicateM)
-import           Data.Binary.Get (Get, runGet, getWord32be, getByteString, getRemainingLazyByteString)
-import           Data.Binary.Put (Put, runPut, putWord32be, putByteString)
+import           Data.Binary.Get (Get, getWord32be, getByteString, getRemainingLazyByteString)
+import           Data.Binary.Put (Put, putWord32be, putByteString)
 import qualified Data.ByteString as B
 import qualified Data.ByteString.Base64 as B64
 import qualified Data.ByteString.Char8 as BC
-import           Data.ByteString.Lazy (fromStrict, toStrict)
+import           Data.ByteString.Lazy (toStrict)
+import           Data.Monoid ((<>))
+import           SSH.Types (getWord32be', getString, putString, runStrictGet, runStrictPut)
 
 data KeyBox = KeyBox
               { ciphername :: B.ByteString
@@ -50,12 +51,6 @@ data PrivateKey = Ed25519PrivateKey
                   }
                 deriving (Show)
 
-runStrictGet :: Get c -> B.ByteString -> c
-runStrictGet = (. fromStrict) . runGet
-
-runStrictPut :: Put -> B.ByteString
-runStrictPut = toStrict . runPut
-
 dearmorPrivateKey :: B.ByteString -> Either String B.ByteString
 dearmorPrivateKey =
     B64.decode
@@ -71,38 +66,27 @@ armorPrivateKey k =
   <> B64.joinWith "\n" 70 (B64.encode k)
   <> armor_end <> "\n"
 
-getWord32be' :: (Integral a) => Get a
-getWord32be' = fromIntegral <$> getWord32be
-
-getPascalString :: Get B.ByteString
-getPascalString = getWord32be' >>= getByteString
-
-putPascalString :: B.ByteString -> Put
-putPascalString s = do
-  putWord32be (fromIntegral $ B.length s)
-  putByteString s
-
 getKeyBox :: Get KeyBox
 getKeyBox = do
   magic <- getByteString (B.length auth_magic)
   unless (magic == auth_magic) (fail "Magic does not match")
-  cn <- getPascalString
+  cn <- getString
   unless (cn == "none") (fail "Unsupported cipher")
-  kn <- getPascalString
+  kn <- getString
   unless (kn == "none") (fail "Unsupported kdf")
-  ko <- getPascalString
+  ko <- getString
   unless (ko == "") (fail "Invalid kdf options")
   count <- getWord32be'
-  publicData <- getPascalString
-  privateData <- getPascalString
+  publicData <- getString
+  privateData <- getString
   return $ KeyBox cn kn ko count publicData privateData
 
 putKeyBox :: PrivateKey -> Put
 putKeyBox key = do
   putByteString auth_magic
-  putPascalString "none"
-  putPascalString "none"
-  putPascalString ""
+  putString "none"
+  putString "none"
+  putString ""
   putWord32be 1
   putPublicKeys [(publicKey key)]
   putPrivateKeys [key]
@@ -110,35 +94,35 @@ putKeyBox key = do
 publicKeys :: KeyBox -> [PublicKey]
 publicKeys box = flip runStrictGet (boxPublicKeys box) $
   replicateM (keycount box) $ do
-    keyType <- getPascalString
+    keyType <- getString
     case keyType of
-     "ssh-ed25519" -> Ed25519PublicKey <$> getPascalString
+     "ssh-ed25519" -> Ed25519PublicKey <$> getString
      _ -> fail "Unsupported key type"
 
 putPublicKeys :: [PublicKey] -> Put
-putPublicKeys = putPascalString . runStrictPut . mapM_ putPublicKey
+putPublicKeys = putString . runStrictPut . mapM_ putPublicKey
 
 putPublicKey :: PublicKey -> Put
 putPublicKey (Ed25519PublicKey k) = do
-  putPascalString "ssh-ed25519"
-  putPascalString k
+  putString "ssh-ed25519"
+  putString k
 
 getPrivateKey :: Get PrivateKey
 getPrivateKey = do
-  keyType <- getPascalString
+  keyType <- getString
   case keyType of
    "ssh-ed25519" -> Ed25519PrivateKey
-                    <$> (Ed25519PublicKey <$> getPascalString)
-                    <*> getPascalString
-                    <*> getPascalString
+                    <$> (Ed25519PublicKey <$> getString)
+                    <*> getString
+                    <*> getString
    _ -> fail "Unsupported key type"
 
 putPrivateKey :: PrivateKey -> Put
 putPrivateKey (Ed25519PrivateKey pk k c) = do
-  putPascalString "ssh-ed25519"
-  putPascalString (publicKeyData pk)
-  putPascalString k
-  putPascalString c
+  putString "ssh-ed25519"
+  putString (publicKeyData pk)
+  putString k
+  putString c
 
 getPrivateKeys :: Int -> Get [PrivateKey]
 getPrivateKeys count = do
@@ -151,7 +135,7 @@ getPrivateKeys count = do
   return keys
 
 putPrivateKeys :: [PrivateKey] -> Put
-putPrivateKeys keys = putPascalString . pad 8 . runStrictPut $ do
+putPrivateKeys keys = putString . pad 8 . runStrictPut $ do
   putWord32be 0
   putWord32be 0
   mapM_ putPrivateKey keys

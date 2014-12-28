@@ -9,19 +9,47 @@ maintainer:          mithrandi@mithrandi.net
 category:            Cryptography
 build-type:          Simple
 cabal-version:       >=1.10
-executable ssh-key-generator
-  main-is:             KeyTool.hs
+
+library
+  exposed-modules:     SSH.Agent,
+                       SSH.Key,
+                       SSH.Types,
+                       Argh
   build-depends:       base >=4.6 && <4.7,
                        binary,
                        bytestring (>= 0.10.4.0),
-                       base64-bytestring,
-                       cryptohash,
-                       unix,
-                       optparse-applicative,
-                       directory,
-                       entropy
-  -- hs-source-dirs:
+                       base64-bytestring
   default-language:    Haskell2010
   default-extensions:  OverloadedStrings, ViewPatterns
   ghc-options:         -Wall -Werror
   extra-libraries:     sodium
+
+executable ssh-key-generator
+  main-is:             KeyTool.hs
+  hs-source-dirs:      app
+  build-depends:       base >=4.6 && <4.7,
+                       unix,
+                       optparse-applicative,
+                       bytestring,
+                       cryptohash,
+                       directory,
+                       entropy,
+                       ssh-key-generator
+  -- hs-source-dirs:
+  default-language:    Haskell2010
+  default-extensions:  OverloadedStrings, ViewPatterns
+  ghc-options:         -Wall -Werror
+
+executable agent-client
+  main-is:             AgentClient.hs
+  hs-source-dirs:      app
+  build-depends:       base >=4.6 && <4.7,
+                       optparse-applicative,
+                       ssh-key-generator,
+                       conduit,
+                       conduit-combinators,
+                       conduit-extra,
+                       binary,
+                       bytestring
+  default-language:    Haskell2010
+  default-extensions:  OverloadedStrings, ViewPatterns
