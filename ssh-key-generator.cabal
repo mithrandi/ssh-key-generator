@@ -10,7 +10,7 @@ category:            Cryptography
 build-type:          Simple
 cabal-version:       >=1.10
 executable ssh-key-generator
-  main-is:             Main.hs
+  main-is:             KeyTool.hs
   build-depends:       base >=4.6 && <4.7,
                        binary,
                        bytestring (>= 0.10.4.0),

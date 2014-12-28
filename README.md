@@ -34,7 +34,7 @@ $ cd ssh-key-generator
 $ cabal sandbox init
 $ cabal install
 $ head -c 32 /dev/urandom > seed
-$ cabal run -- --seed ./seed --mode raw --handle HIMOM --output ./id_ed25519
+$ cabal run ssh-key-generator -- --seed ./seed --mode raw --handle HIMOM --output ./id_ed25519
 $ ssh-keygen -y -f ./id_ed25519
 ```
 
