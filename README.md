@@ -32,7 +32,7 @@ Debian/Ubuntu, the `ghc` and `libsodium-dev` packages are what you need.
 $ git clone https://github.com/mithrandi/ssh-key-generator.git
 $ cd ssh-key-generator
 $ cabal sandbox init
-$ cabal install
+$ cabal install --only-dependencies
 $ head -c 32 /dev/urandom > seed
 $ cabal run ssh-key-generator -- --seed ./seed --mode raw --handle HIMOM --output ./id_ed25519
 $ ssh-keygen -y -f ./id_ed25519
