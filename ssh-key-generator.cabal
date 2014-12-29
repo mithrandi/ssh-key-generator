@@ -41,8 +41,8 @@ executable ssh-key-generator
   default-extensions:  OverloadedStrings, ViewPatterns
   ghc-options:         -Wall -Werror
 
-executable agent-client
-  main-is:             AgentClient.hs
+executable agent-tool
+  main-is:             AgentTool.hs
   hs-source-dirs:      app
   build-depends:       base >=4.6 && <4.7,
                        optparse-applicative,

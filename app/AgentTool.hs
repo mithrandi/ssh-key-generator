@@ -94,8 +94,8 @@ main :: IO ()
 main = execParser opts >>= (run . optCommand)
   where opts = info (helper <*> parseOptions) (
           fullDesc
-          <> progDesc "Simple SSH agent client"
-          <> header "agent-client - a simple SSH agent client")
+          <> progDesc "Simple SSH agent implementation"
+          <> header "agent-tool - a simple and specialized SSH agent implementation")
         run (ListKeys) = print =<< runOneCommand RequestIdentities
         run (StartAgent sock seedFile handlesFile) = do
           seed <- B.readFile seedFile
