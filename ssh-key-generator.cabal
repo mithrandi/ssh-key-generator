@@ -14,11 +14,13 @@ library
   exposed-modules:     SSH.Agent,
                        SSH.Key,
                        SSH.Types,
+                       SSH.Key.Derived,
                        Argh
   build-depends:       base >=4.6 && <4.7,
                        binary,
                        bytestring (>= 0.10.4.0),
-                       base64-bytestring
+                       base64-bytestring,
+                       cryptohash
   default-language:    Haskell2010
   default-extensions:  OverloadedStrings, ViewPatterns
   ghc-options:         -Wall -Werror
@@ -31,7 +33,6 @@ executable ssh-key-generator
                        unix,
                        optparse-applicative,
                        bytestring,
-                       cryptohash,
                        directory,
                        entropy,
                        ssh-key-generator
@@ -50,6 +51,7 @@ executable agent-client
                        conduit-combinators,
                        conduit-extra,
                        binary,
-                       bytestring
+                       bytestring,
+                       containers
   default-language:    Haskell2010
   default-extensions:  OverloadedStrings, ViewPatterns

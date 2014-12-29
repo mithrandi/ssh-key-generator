@@ -6,6 +6,7 @@ module SSH.Key
        , serialiseKey
        , publicKeys
        , privateKeys
+       , putPublicKey
        ) where
 
 import           Control.Applicative ((<$>), (<*>))

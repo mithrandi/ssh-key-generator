@@ -1,14 +1,13 @@
 module Main (main) where
 
-import           Argh (seed_keypair)
 import           Control.Applicative ((<$>), (<*>))
 import           Control.Monad (when)
-import qualified Crypto.Hash.SHA256 as SHA256
 import qualified Data.ByteString as B
 import qualified Data.ByteString.Char8 as BC
 import           Data.Monoid ((<>))
 import           Options.Applicative (eitherReader, Parser, strOption, long, short, metavar, help, option, ReadM, execParser, info, fullDesc, progDesc, header, helper)
-import           SSH.Key (PrivateKey(Ed25519PrivateKey), PublicKey(Ed25519PublicKey), serialiseKey, parseKey, privateKeys)
+import           SSH.Key (PrivateKey(Ed25519PrivateKey), serialiseKey, parseKey, privateKeys)
+import           SSH.Key.Derived (deriveKey)
 import           System.Directory (doesFileExist)
 import           System.Entropy (getEntropy)
 import           System.Posix.Files (setFileCreationMask, groupModes, otherModes, unionFileModes)
@@ -76,9 +75,6 @@ main = do
     <> progDesc "Generate an Ed25519 SSH key deterministically"
     <> header "ssh-key-generator - a deterministic SSH key generator")
   let handle = BC.pack (argsHandle args)
-  secret <- getSeed (argsMode args) (argsSeed args)
-  let seed = SHA256.hash (secret <> handle)
-  let (publicKeyData, privateKeyData) = seed_keypair seed
+  seed <- getSeed (argsMode args) (argsSeed args)
   _ <- setFileCreationMask $ groupModes `unionFileModes` otherModes
-  B.writeFile (argsOutput args) . serialiseKey
-    $ Ed25519PrivateKey (Ed25519PublicKey publicKeyData) privateKeyData handle
+  B.writeFile (argsOutput args) . serialiseKey . snd $ deriveKey seed handle
