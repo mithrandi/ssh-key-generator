@@ -15,7 +15,7 @@ seed_keypair seed | S.length seed /= signSeed = error "seed has incorrect length
   pk <- mallocBytes signPK
   handle (\e -> free pk >> throw (e :: SomeException)) $ do
     sk <- mallocBytes signSK
-    handle (\e -> free sk >> throw (e :: SomeException)) $ do
+    handle (\e -> free sk >> throw (e :: SomeException)) $
       SU.unsafeUseAsCString seed $ \pseed -> do
         0 <- c_sign_seed_keypair pk sk pseed
         bpk <- SU.unsafePackMallocCStringLen (pk, signPK)
