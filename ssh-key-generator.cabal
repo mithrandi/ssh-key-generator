@@ -16,7 +16,7 @@ library
                        SSH.Types,
                        SSH.Key.Derived,
                        Argh
-  build-depends:       base >=4.6 && <4.7,
+  build-depends:       base,
                        binary,
                        bytestring >= 0.10.4.0,
                        base64-bytestring,
@@ -29,7 +29,7 @@ library
 executable ssh-key-generator
   main-is:             KeyTool.hs
   hs-source-dirs:      app
-  build-depends:       base >=4.6 && <4.7,
+  build-depends:       base,
                        unix,
                        optparse-applicative >= 0.7.0,
                        bytestring,
@@ -44,7 +44,7 @@ executable ssh-key-generator
 executable agent-tool
   main-is:             AgentTool.hs
   hs-source-dirs:      app
-  build-depends:       base >=4.6 && <4.7,
+  build-depends:       base,
                        optparse-applicative >= 0.7.0,
                        ssh-key-generator,
                        conduit,
