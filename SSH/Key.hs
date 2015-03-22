@@ -89,7 +89,7 @@ putKeyBox key = do
   putString "none"
   putString ""
   putWord32be 1
-  putPublicKeys [(publicKey key)]
+  putPublicKeys [publicKey key]
   putPrivateKeys [key]
 
 publicKeys :: KeyBox -> [PublicKey]
