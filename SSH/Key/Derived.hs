@@ -3,7 +3,6 @@ module SSH.Key.Derived (deriveKey) where
 import           Argh (seed_keypair)
 import qualified Crypto.Hash.SHA256 as SHA256
 import           Data.ByteString (ByteString)
-import           Data.Monoid ((<>))
 import           SSH.Key (PrivateKey(Ed25519PrivateKey), PublicKey(Ed25519PublicKey))
 
 deriveKey :: ByteString -> ByteString -> (PublicKey, PrivateKey)

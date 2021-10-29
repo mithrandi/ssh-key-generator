@@ -1,12 +1,10 @@
 module SSH.Agent where
 
-import           Control.Applicative ((<$>), (<*>))
 import           Control.Monad (replicateM)
 import           Data.Binary.Get (Get, runGet, getWord8, getWord32be)
 import           Data.Binary.Put (Put, runPut, putWord8, putWord32be)
 import qualified Data.ByteString as B
 import qualified Data.ByteString.Lazy as LB
-import           Data.Monoid ((<>))
 import           Data.Word (Word8, Word32)
 import           SSH.Types (getWord32be', getString, putWord32be', putString)
 

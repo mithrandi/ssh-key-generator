@@ -9,7 +9,6 @@ module SSH.Key
        , putPublicKey
        ) where
 
-import           Control.Applicative ((<$>), (<*>))
 import           Control.Monad (unless, replicateM)
 import           Data.Binary.Get (Get, getWord32be, getByteString, getRemainingLazyByteString)
 import           Data.Binary.Put (Put, putWord32be, putByteString)
@@ -17,7 +16,7 @@ import qualified Data.ByteString as B
 import qualified Data.ByteString.Base64 as B64
 import qualified Data.ByteString.Char8 as BC
 import           Data.ByteString.Lazy (toStrict)
-import           Data.Monoid ((<>))
+import           Data.List (unfoldr)
 import           SSH.Types (getWord32be', getString, putString, runStrictGet, runStrictPut)
 
 data KeyBox = KeyBox
@@ -64,8 +63,17 @@ dearmorPrivateKey =
 armorPrivateKey :: B.ByteString -> B.ByteString
 armorPrivateKey k =
   armor_start <> "\n"
-  <> B64.joinWith "\n" 70 (B64.encode k)
+  <> foldMap (<>"\n") (chunksOf 70 (B64.encode k))
   <> armor_end <> "\n"
+  where
+    justWhen :: (a -> Bool) -> (a -> b) -> (a -> Maybe b)
+    justWhen f g a = if f a then Just (g a) else Nothing
+
+    nothingWhen :: (a -> Bool) -> (a -> b) -> (a -> Maybe b)
+    nothingWhen f = justWhen (not . f)
+
+    chunksOf :: Int -> B.ByteString -> [B.ByteString]
+    chunksOf x = unfoldr (nothingWhen B.null (B.splitAt x))
 
 getKeyBox :: Get KeyBox
 getKeyBox = do
