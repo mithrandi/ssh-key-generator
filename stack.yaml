@@ -22,7 +22,7 @@ resolver:
 
 nix:
   enable: true
-  packages: [ libsodium ]
+  packages: [ libsodium, zlib ]
 
 # User packages to be built.
 # Various formats can be used as shown in the example below.
