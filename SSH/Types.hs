@@ -7,7 +7,6 @@ module SSH.Types
        , runStrictPut
        ) where
 
-import           Control.Applicative ((<$>))
 import           Data.Binary.Get (Get, getWord32be, getByteString, runGet)
 import           Data.Binary.Put (Put, putWord32be, putByteString, runPut)
 import qualified Data.ByteString as B

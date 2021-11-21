@@ -1,10 +1,8 @@
 module Main (main) where
 
-import           Control.Applicative ((<$>), (<*>))
 import           Control.Monad (when)
 import qualified Data.ByteString as B
 import qualified Data.ByteString.Char8 as BC
-import           Data.Monoid ((<>))
 import           Options.Applicative (eitherReader, Parser, strOption, long, short, metavar, help, option, ReadM, execParser, info, fullDesc, progDesc, header, helper)
 import           SSH.Key (PrivateKey(Ed25519PrivateKey), serialiseKey, parseKey, privateKeys)
 import           SSH.Key.Derived (deriveKey)
